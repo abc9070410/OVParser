@@ -22,6 +22,6 @@
    "incognito": "split",
    "manifest_version": 2,
    "name": "__MSG_appName__",
-   "permissions": [ "clipboardRead", "clipboardWrite", "webRequest", "webRequestBlocking", "bookmarks", "tabs", "storage", "http://*/*", "https://*/*" ],
-   "version": "0.0.1.7"
+   "permissions": [ "clipboardRead", "clipboardWrite", "webRequest", "webRequestBlocking", "tabs", "storage", "http://*/*", "https://*/*" ],
+   "version": "0.0.1.8"
 }
