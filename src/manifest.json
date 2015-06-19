@@ -1,0 +1,27 @@
+{
+   "background": {
+      "page": "background.html"
+   },
+   "browser_action": {
+      "default_icon": "images/logo_grey19.png",
+      "default_title": "Onlive Video Parser"
+   },
+   "content_scripts": [{
+      "css": [ "loader.css" ],
+      "js": [ "js/loader.js"],
+      "matches": [ "http://*/*", "https://*/*" ],
+      "run_at": "document_end"
+   }],
+   "default_locale": "en",
+   "description": "__MSG_appDesc__",
+   "icons": {
+      "16": "images/logo19.png",
+      "48": "images/logo48.png",
+      "128": "images/logo128.png"
+   },
+   "incognito": "split",
+   "manifest_version": 2,
+   "name": "__MSG_appName__",
+   "permissions": [ "clipboardRead", "clipboardWrite", "webRequest", "webRequestBlocking", "bookmarks", "tabs", "storage", "http://*/*", "https://*/*" ],
+   "version": "0.0.1.7"
+}

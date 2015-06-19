@@ -1,0 +1,56 @@
+{
+	"appDesc": {
+		"message": "方便下載並整理線上影片與封面資源"
+	},
+	"appName": {
+		"message": "線上影片解析家"
+	},
+	"idvideo": {
+		"message": "顯示此頁所有影片"
+	},
+	"idVDL": {
+		"message": "發現影片："
+	},
+	"idnovideo": {
+		"message": "沒有找到影片。"
+	},
+	"search": {
+		"message": "搜尋"
+	},
+	"filter": {
+		"message": "篩選的影片"
+	},
+	"done": {
+		"message": "套用變更"
+	},
+	"cancel": {
+		"message": "取消"
+	},
+	"original": {
+		"message": "進入到原來的網站"
+	},
+	"close": {
+		"message": "關閉"
+	},
+	"videolist": {
+		"message": "影片"
+	},
+	"name": {
+		"message": "暱稱"
+	},
+	"apply": {
+		"message": "申請"
+	},
+	"ok": {
+		"message": "可以"
+	},
+    "choiceCurrentVideoTitle": {
+		"message": "請選擇播放中的影片標題"
+	},
+    "downloadVideo": {
+		"message": "下載影片"
+	},
+    "rechoice": {
+		"message": "重新選擇"
+	}
+}
