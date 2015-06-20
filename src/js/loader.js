@@ -364,8 +364,8 @@ function getAllTitle()
     }
     else if (giSite == SITE_XXXFK)
     {
-        var eTitle = document.getElementById("mname");
-        asTitle[0] = eTitle.innerHTML;
+        var eTitle = document.getElementsByTagName("title")[0];
+        asTitle[0] = eTitle.innerHTML.split(" - ")[0].replace("Watch Online", "").trim();
         sendCopyText(asTitle[0], 0);
     }
     else if (giSite == SITE_BILIBILI)
@@ -389,7 +389,7 @@ function getAllTitle()
             var sHTML = aeTitle[0].innerHTML.split(sSplitToken)[0];
             var iBegin = 0;
             var iEnd = sHTML.length;
-            asTitle[0] = sHTML.substring(iBegin, iEnd).replace("Watch Online", "").trim();
+            asTitle[0] = sHTML.substring(iBegin, iEnd).trim();
         }
         
        

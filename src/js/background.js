@@ -84,6 +84,8 @@ var L64B = {
 				if (callback) {
                     chrome.tabs.query({active: true}, function (arrayOfTabs) {
                         var tabId = arrayOfTabs[0].id;
+                        
+                        console.log("--->" + tabId + "," + details.tabId);
 
                         chrome.tabs.get(details.tabId, function(tab) {
                             callback({
