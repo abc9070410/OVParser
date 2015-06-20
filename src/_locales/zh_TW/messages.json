@@ -52,5 +52,8 @@
 	},
     "rechoice": {
 		"message": "重新選擇"
+	},
+    "copyToClipboard": {
+		"message": "影片標題已經複製到剪貼簿"
 	}
 }

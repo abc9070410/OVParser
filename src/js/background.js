@@ -19,8 +19,31 @@ function copyTextToClipboard(text) {
     eDiv.select();
     document.execCommand('copy', true);
     eDiv.remove();
+    
+    showNotification(text);
 }
 
+function showNotification(sMessage)
+{
+    var opt = {
+        type: "basic",
+        title: getI18nMsg("copyToClipboard"),
+        message: sMessage,
+        iconUrl: "images/downloadButton.png"
+    };
+    
+    chrome.notifications.create("", opt, function(id) {
+       console.error(chrome.runtime.lastError);
+    });
+}
+
+function getI18nMsg(msgname) {
+    try {
+        return chrome.i18n.getMessage(msgname)
+    } catch (err) {
+        return msgname
+    }
+};
 
 String.prototype.hashCode = function() {
 	var hash = 0;
@@ -61,9 +84,7 @@ var L64B = {
 				if (callback) {
                     chrome.tabs.query({active: true}, function (arrayOfTabs) {
                         var tabId = arrayOfTabs[0].id;
-                        
-                        console.log("---------->" + tabId + "," + gasData[tabId]);
-                        
+
                         chrome.tabs.get(details.tabId, function(tab) {
                             callback({
                                 videoUrls: vdl.urllist[tabId],
@@ -79,19 +100,38 @@ var L64B = {
 					return true;
 				}
 			} else if (details.msg == "SetVideoIndex") {
-                giVideoIndex = details.videoIndex;
-                console.log("[OVP]SetVideoIndex:" + giVideoIndex);
+                chrome.tabs.query({active: true}, function (arrayOfTabs) {
+                    var tabId = arrayOfTabs[0].id;
+                    
+                    if (!gasData[tabId])
+                    {
+                        gasData[tabId] = new Object();
+                    }
+
+                    gasData[tabId].giVideoIndex = details.videoIndex;
+                    console.log("[OVP]SetVideoIndex:" + gasData[tabId].giVideoIndex);
+                });
 				if (callback) {
 					return true;
 				}
 			} else if (details.msg == "CopyText") {
-                giVideoIndex = details.videoIndex;
+                chrome.tabs.query({active: true}, function (arrayOfTabs) {
+                    var tabId = arrayOfTabs[0].id;
+                    
+                    if (!gasData[tabId])
+                    {
+                        gasData[tabId] = new Object();
+                    }
+                    
+                    gasData[tabId].giVideoIndex = details.videoIndex;
+                    
+                    var sText = details.text ? details.text : gasData[tabId].gasFileName[gasData[tabId].giVideoIndex];
+                    
+                    copyTextToClipboard(sText);
+                    
+                    console.log("[OVP]CopyText:" + sText);
+                });
                 
-                var sText = details.text ? details.text : gasFileName[giVideoIndex];
-                
-                copyTextToClipboard(sText);
-                
-                console.log("[OVP]CopyText:" + sText);
 				if (callback) {
 					return true;
 				}
@@ -135,7 +175,8 @@ var L64B = {
 					return true;
 				}
 			} else if (details.msg == "ClearVideoInfo") {
-				window.location.reload();
+				//window.location.reload();
+                gasData[tabId] = new Object();
 				
 				if (callback) {
 					return true;

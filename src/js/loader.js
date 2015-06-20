@@ -370,9 +370,14 @@ function getAllTitle()
     }
     else if (giSite == SITE_BILIBILI)
     {
+        var sUrl = window.location.href;
         var eTitle = document.getElementsByTagName("title")[0];
         asTitle[0] = eTitle.innerHTML.split("_")[0].trim();
-        sendCopyText(asTitle[0], 0);
+        
+        if (sUrl.indexOf("/video/") > 0)
+        {
+            sendCopyText(asTitle[0], 0);
+        }
     }
     else
     {

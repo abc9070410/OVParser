@@ -15,6 +15,8 @@ var SITE_ADULTCITY = 4;
 var SITE_EROPPY = 5;
 var SITE_BLOGGER = 6;
 var SITE_BILIBILI = 7;
+var SITE_XXXFK = 8;
+var SITE_THISAV = 9;
 var SITE_OTHER = 99;
 var giSite = SITE_OTHER;
 
@@ -132,12 +134,16 @@ function showVideoUrls() {
                     sFileName = ob.title;
                 }
 
-                sInner += "<b>" + sFileName + "</b><br>"
+                sInner += "<b>&nbsp;&nbsp;&nbsp;" + sFileName + "</b><br>"
                 sInner += "<div>";
-                sInner += "<a type='button' id='downloadID' value='Download' href='" + url + "' download='" + sFileName + "'>>>&nbsp;" + getI18nMsg("downloadVideo") + "&nbsp;<<</a>";
+                sInner += "&nbsp;&nbsp;&nbsp;<a type='button' id='downloadID' value='Download' href='" + url + "' download='" + sFileName + "'>" + getI18nMsg("downloadVideo") + "</a>";
                 sInner += "</a>";
-                sInner += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-                sInner += "<a type='button' href='#' id='goBackID' >" + getI18nMsg("rechoice") + "</a>";
+                
+                if (giSite == SITE_TWDVD)
+                {
+                    sInner += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+                    sInner += "<a type='button' href='#' id='goBackID' >" + getI18nMsg("rechoice") + "</a>";
+                }
                 sInner += "</div><hr>";
                 
                 

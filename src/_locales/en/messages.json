@@ -59,5 +59,8 @@
 	},
     "rechoice": {
 		"message": "Choice Again"
+	},
+    "copyToClipboard": {
+		"message": "The title has been copied to the clipboard."
 	}
 }
