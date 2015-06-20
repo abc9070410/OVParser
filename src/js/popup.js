@@ -3,9 +3,9 @@
 var fVideoVersion = false;
 var fSearchIsOn = false;
 
-var gasTitle = new Array();
-var gasPicUrl = new Array();
-var gasFileName = new Array();
+var gasTitle = [];
+var gasPicUrl = [];
+var gasFileName = [];
 var giVideoIndex = -1;
 
 var SITE_TWDVD = 1;
@@ -89,6 +89,7 @@ var curTabId = 0;
 var videoUrls = 0;
 
 function showVideoUrls() {
+    var sCoverUrl = null;
     var sInner = "";
     if (!videoUrls) {
         sInner += getRadioItem();
@@ -123,7 +124,7 @@ function showVideoUrls() {
             else
             {
                 var sTitle = gasTitle[giVideoIndex];
-                var sPicUrl = gasPicUrl[giVideoIndex];
+                
                 var sFileName = gasFileName[giVideoIndex];
                 
                 if (giSite == SITE_BILIBILI)
@@ -139,11 +140,29 @@ function showVideoUrls() {
                 sInner += "<a type='button' href='#' id='goBackID' >" + getI18nMsg("rechoice") + "</a>";
                 sInner += "</div><hr>";
                 
-                if (sPicUrl)
-                {
-                    sInner += "<img src='" + sPicUrl + "' style='width:100%; height:100%;' ></img>";
-                }
+                
             }
+            
+            if (ob.cover)
+            {
+                sCoverUrl = ob.cover;
+                console.log("[OVP]Cover found:" + sCoverUrl);
+            }
+        }
+        
+        var sPicUrl;
+        if (gasPicUrl[giVideoIndex])
+        {
+            sPicUrl = gasPicUrl[giVideoIndex];
+        }
+        else if (sCoverUrl)
+        {
+            sPicUrl = sCoverUrl;
+        }
+        
+        if (sPicUrl)
+        {
+            sInner += "<img src='" + sPicUrl + "' style='width:100%; height:100%;' ></img>";
         }
     }
     var o = document.getElementById("idVideos");
@@ -183,7 +202,13 @@ function clickDownload()
     {
         return; // do nothing cause there exists multiple videos
     }
-    
+
+    setTimeout(reloadPage, 500); // reload page after n seconds
+    setTimeout(closePopWindow, 1500); // close the pop menu after n seconds
+}
+
+function reloadPage()
+{
     // reload this page for stopping the video
     chrome.tabs.query({active: true, currentWindow: true}, function (arrayOfTabs) {
         var code;
@@ -197,11 +222,9 @@ function clickDownload()
             code = 'history.back();';
         }
     
-    chrome.tabs.executeScript(arrayOfTabs[0].id, {code: code});
+        chrome.tabs.executeScript(arrayOfTabs[0].id, {code: code});
+        clearVideoInfo();
     });
-    
-	clearVideoInfo();
-    setTimeout(closePopWindow, 1000); // close the pop menu after n seconds
 }
 
 function closePopWindow()

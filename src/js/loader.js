@@ -8,6 +8,7 @@ var SITE_EROPPY = 5;
 var SITE_BLOGGER = 6;
 var SITE_BILIBILI = 7;
 var SITE_XXXFK = 8;
+var SITE_THISAV = 9;
 var SITE_OTHER = 99;
 var giSite = SITE_OTHER;
 
@@ -69,12 +70,16 @@ function setSite()
     {
         giSite = SITE_XXXFK;
     }
+    else if (sUrl.indexOf("thisav.com") > 0)
+    {
+        giSite = SITE_THISAV;
+    }
     else
     {
         giSite = SITE_OTHER;
     }
     
-    console.log("[TWD]SetSite:" + giSite + " [" + sUrl + "]");
+    console.log("[OVP]SetSite:" + giSite + " [" + sUrl + "]");
 }
 
 function removeSpecificCh(sText)
@@ -230,7 +235,7 @@ function getAllFileName(asTitle, asPicUrl)
         }
     }
     
-    console.log("[TWD]getAllFileName:" + asFileName);
+    console.log("[OVP]getAllFileName:" + asFileName);
     
     return asFileName;
 }
@@ -363,6 +368,12 @@ function getAllTitle()
         asTitle[0] = eTitle.innerHTML;
         sendCopyText(asTitle[0], 0);
     }
+    else if (giSite == SITE_BILIBILI)
+    {
+        var eTitle = document.getElementsByTagName("title")[0];
+        asTitle[0] = eTitle.innerHTML.split("_")[0].trim();
+        sendCopyText(asTitle[0], 0);
+    }
     else
     {
         var sSplitToken = " - ";
@@ -379,24 +390,59 @@ function getAllTitle()
        
     }
     
-    console.log("[TWD]getAllTitle:" + asTitle);
+    console.log("[OVP]getAllTitle:" + asTitle);
     
     return asTitle;
 }
 
 function getAllPicUrl()
 {
-    var aePic = document.getElementsByClassName("blog_body");
-    var asPic = new Array();
+    var asPic = [];
     
-    for ( var i = 0; i < aePic.length; i ++ )
+    if (giSite == SITE_TWDVD)
     {
-        var sHTML = aePic[i].innerHTML;
-        var iBegin = sHTML.indexOf("image=") + 6;
-        var iEnd = sHTML.indexOf("\"", iBegin);
-        asPic[i] = sHTML.substring(iBegin, iEnd);
+        var aePic = document.getElementsByClassName("blog_body");
         
-    }    
+        for ( var i = 0; i < aePic.length; i ++ )
+        {
+            var sHTML = aePic[i].innerHTML;
+            var iBegin = sHTML.indexOf("image=") + 6;
+            var iEnd = sHTML.indexOf("\"", iBegin);
+            asPic[i] = sHTML.substring(iBegin, iEnd);
+            
+        }    
+    }
+    else if (giSite == SITE_BILIBILI)
+    {
+        var eDiv = document.getElementsByClassName("cover_image")[0];
+        asPic[0] = eDiv.src;
+    }
+    else if (giSite == SITE_EROPPY)
+    {
+        var eDiv = document.getElementsByClassName("rating-bar-container")[0];
+        
+        if (eDiv)
+        {
+            var sTemp = eDiv.innerHTML;
+            var iBegin = sTemp.indexOf("http");
+            var iEnd = sTemp.indexOf("\"", iBegin);
+            asPic[0] = sTemp.substring(iBegin, iEnd);
+        }
+    }
+    else if (giSite == SITE_THISAV)
+    {
+        var sUrl = window.location.href;
+        var asTemp = sUrl.split("/video/");
+        
+        var sTag = null;
+        if (asTemp.length == 2)
+        {
+            sTag = asTemp[1].split("/")[0];
+            asPic[0] = "http://images.thisav.com/images/videothumbs/" + sTag + "-1.jpg";
+        }
+    }
+
+    console.log("[OVP] Cover:" + asPic);
     
     return asPic;
 }

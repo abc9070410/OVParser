@@ -1,4 +1,5 @@
 ﻿var giNowTabId = 0;
+var gsCoverUrl = null;
 
 L64B.video = {
     checkForValidUrl: function(tabId, changeInfo, tab) {
@@ -193,6 +194,15 @@ var vdl = {
                         }
                     }
                 }
+                
+                if (mime.indexOf("image/") != -1)
+                {
+                    if (url.indexOf("/media/") > 0) // SITE_XUITE
+                    {
+                        gsCoverUrl = url;
+                        console.log("[OVP]CoverUrl:" + gsCoverUrl);
+                    }
+                }
             }
             if (details.responseHeaders[i].name === 'Content-Length')
             {
@@ -206,7 +216,7 @@ var vdl = {
             console.log("[OVP]->Content-Type: MIME:" + mime + "  URL:" + url);
             console.log("[OVP]->Content-Length: LEN:" + len);
         }
-        
+                
         //console.log("[OVP]" + isVideo + "," + bNeedGetPlayUrl + "," + vdl.urllist[details.tabId]);
 
         
@@ -226,7 +236,7 @@ var vdl = {
         else if (type !== false && 
                  (bNeedGetPlayUrl || bNoLength || (len > 1024) || !isVideo)) 
         {
-            vdl = foundValidVideo(details, vdl, type, priority, len, null, null);
+            vdl = foundValidVideo(details, vdl, type, priority, len, null, null, gsCoverUrl);
         }
         
         var filename = vdl.downloadlist[details.url];
@@ -248,7 +258,7 @@ var vdl = {
     }
 }
 
-function foundValidVideo(details, vdl, type, priority, len, sParsedUrl, sParsedTitle)
+function foundValidVideo(details, vdl, type, priority, len, sParsedUrl, sParsedTitle, sCoverUrl)
 {
     vdl.statlist[details.tabId] = 1;
     if (!vdl.urllist[details.tabId])
@@ -283,14 +293,15 @@ function foundValidVideo(details, vdl, type, priority, len, sParsedUrl, sParsedT
                     sTitle = sParsedTitle;
                 }
                 
-                console.log("[OVP]Title:" + sTitle + "  VideoUrl:" + sURL);
+                console.log("[OVP]Title:" + sTitle + "  VideoUrl:" + sURL + "  CoverUrl:" + sCoverUrl);
                 
                 vdl.urllist[tabid].splice(0, 0, {
                     url: sURL,
                     mime: type,
                     p: priority,
                     len: len,
-                    title: sTitle
+                    title: sTitle,
+                    cover: sCoverUrl
                 });
                 chrome.browserAction.setIcon({
                     tabId: tab.id,
@@ -329,9 +340,22 @@ function parsePlayUrl()
         
         iEnd = asUrl[i].indexOf("?");
         iBegin = asUrl[i].lastIndexOf("/", iEnd) + 1;
-        var sTitle = "_Part" + (i+1) + "_" + asUrl[i].substring(iBegin, iEnd).trim();
         
-        foundValidVideo(this.oDetails, this.oVdl, "mp4", 1, 1024, asUrl[i], sTitle);
+        var sTitle;
+        if (iEnd > iBegin)
+        {
+            sTitle = asUrl[i].substring(iBegin, iEnd).trim();
+        }
+        else 
+        {
+            var asTemp2 = asUrl[i].split("/");
+            sTitle = asTemp2[asTemp2.length - 1].trim();
+        }
+        var sTitle = "_Part" + (i+1) + "_" + sTitle;
+        
+        //console.log("[OVP]" + (i + 1) + "  Title:" + sTitle + "  Url:" + asUrl[i]);
+        
+        foundValidVideo(this.oDetails, this.oVdl, "mp4", 1, 1024, asUrl[i], sTitle, null);
     }
     
     //vdl.urllist[giNowTabId] = asUrl;
