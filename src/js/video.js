@@ -1,5 +1,6 @@
 ﻿var giNowTabId = 0;
 var gsCoverUrl = null;
+var gsNowUrl = "";
 
 L64B.video = {
     checkForValidUrl: function(tabId, changeInfo, tab) {
@@ -137,6 +138,9 @@ var vdl = {
                 path: "../images/logo19.png"
             });
         }
+        
+        gsNowUrl = tab.url;
+        
         return;
     },
 
@@ -234,7 +238,8 @@ var vdl = {
             xmlHttpReq.oVdl = vdl;
         }
         else if (type !== false && 
-                 (bNeedGetPlayUrl || bNoLength || (len > 1024) || !isVideo)) 
+                 (bNeedGetPlayUrl || bNoLength || (len > 1024) || !isVideo) &&
+                 !isYoutube()) // do not parse youtube 
         {
             vdl = foundValidVideo(details, vdl, type, priority, len, null, null, gsCoverUrl);
         }
@@ -256,6 +261,11 @@ var vdl = {
             };
         }
     }
+}
+
+function isYoutube()
+{
+    return (gsNowUrl.indexOf("youtube.com") > 0);
 }
 
 function foundValidVideo(details, vdl, type, priority, len, sParsedUrl, sParsedTitle, sCoverUrl)

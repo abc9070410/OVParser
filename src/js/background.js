@@ -84,8 +84,6 @@ var L64B = {
 				if (callback) {
                     chrome.tabs.query({active: true}, function (arrayOfTabs) {
                         var tabId = arrayOfTabs[0].id;
-                        
-                        console.log("--->" + tabId + "," + details.tabId);
 
                         chrome.tabs.get(details.tabId, function(tab) {
                             callback({
@@ -162,7 +160,7 @@ var L64B = {
                     {
                         gasData[tabId].giSite = details.nowSite;
                     }
-                    console.log("[OVP][ID:" + tabId + "][setTitleAndPicUrl:" + gasData[tabId].gasTitle + "][" + gasData[tabId].gasPicUrl + "]");
+                    console.log("[OVP][ID:" + tabId + "][SITE:" + gasData[tabId].giSite + "][setTitleAndPicUrl:" + gasData[tabId].gasTitle + "][" + gasData[tabId].gasPicUrl + "]");
                 });
                 
 				if (callback) {
@@ -181,6 +179,21 @@ var L64B = {
                 gasData[tabId] = new Object();
 				
 				if (callback) {
+					return true;
+				}
+			} else if (details.msg == "GetSiteId") {
+
+				if (callback) {
+                    chrome.tabs.query({active: true}, function (arrayOfTabs) {
+                        var tabId = arrayOfTabs[0].id;
+
+                        chrome.tabs.get(details.tabId, function(tab) {
+                            callback({
+                                nowSite: gasData[tabId].giSite
+                            })
+                        });
+                    });
+
 					return true;
 				}
 			}
