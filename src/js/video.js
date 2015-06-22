@@ -13,6 +13,9 @@ L64B.video = {
             return;
         L64B.video.onUpdateTabCalled = true;
         popupHTML = "popup.html?";
+        
+        console.log("[OVP] Update Tab");
+        initVariables();
 
         if (L64B.fVideoVersion)
             popupHTML += "&version=video";
@@ -159,7 +162,7 @@ var vdl = {
 
 			//console.log("[OVP]Name:" + details.responseHeaders[i].name + "  MINE:" + details.responseHeaders[i].value + "  URL:" + details.url);
         
-            if (details.responseHeaders[i].name === 'Content-Type' ||
+            if (details.responseHeaders[i].name.toLowerCase() === 'content-type' ||
 				details.responseHeaders[i].name === "x-content-type-options") {
                 var mime = details.responseHeaders[i].value;
                 var url = details.url;
@@ -208,7 +211,7 @@ var vdl = {
                     }
                 }
             }
-            if (details.responseHeaders[i].name === 'Content-Length')
+            if (details.responseHeaders[i].name.toLowerCase() === 'content-length')
             {
                 len = details.responseHeaders[i].value;
                 //console.log("[OVP]Content-Length: LEN:" + len);
@@ -242,6 +245,8 @@ var vdl = {
                  !isYoutube()) // do not parse youtube 
         {
             vdl = foundValidVideo(details, vdl, type, priority, len, null, null, gsCoverUrl);
+            
+            gsCoverUrl = null;
         }
         
         var filename = vdl.downloadlist[details.url];
@@ -371,6 +376,13 @@ function parsePlayUrl()
     //vdl.urllist[giNowTabId] = asUrl;
 
     console.log("[OVP]ParsePlayUrl:" + asUrl);
+}
+
+function initVariables()
+{
+    giNowTabId = 0;
+    gsCoverUrl = null;
+    gsNowUrl = "";
 }
 
 chrome.webRequest.onHeadersReceived.addListener(vdl.checkObject, {

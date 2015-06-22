@@ -17,6 +17,7 @@ var SITE_BLOGGER = 6;
 var SITE_BILIBILI = 7;
 var SITE_XXXFK = 8;
 var SITE_THISAV = 9;
+var SITE_FACEBOOK = 10;
 var SITE_OTHER = 99;
 var giSite = SITE_OTHER;
 
@@ -59,7 +60,7 @@ function GetFileExtension(ob) {
         }
     }
     for (var j = 0; j < ext.length; j++) {
-        if (ob.url & ob.url.toLowerCase().indexOf(ext[j]) >= 0) {
+        if (ob.url & ob.url.toLowerCase().indexOf("." + ext[j]) >= 0) {
             return ext[j];
         }
     }
@@ -108,9 +109,9 @@ function showVideoUrls() {
                 sInner += "<div class='sep2'></div>";
             var color = "#aaa";
             if (ext == "flv")
-                color = "#73AAFF";
+                color = "#73A";
             else if (ext == "mp4" || ext == "mp4" || ext == "m4v")
-                color = "#58d2fd";
+                color = "#58d";
             else if (ext == "3g")
                 color = "#faa";
             else if (ext == "wmv")
@@ -118,6 +119,13 @@ function showVideoUrls() {
 
             sInner += "<div class='wrap'><div class='clFileExt' style='background-color:" + color + "'>" + ext + "</div>";
             
+            if (ob.len > 0)
+            {
+                var iVideoSize = Math.floor(ob.len * 10 / 1024 / 1024) / 10;
+                sInner += "<div class='wrap' style=''><div class='clFileExt' style='background-color:" + color + "555'>" + iVideoSize + " MB</div>";
+            }
+                
+
             if (giVideoIndex < 0)
             {
                 sInner += "<b>" + getI18nMsg("choiceCurrentVideoTitle") + ": " + "</b><hr>";
@@ -127,7 +135,7 @@ function showVideoUrls() {
             {
                 var sTitle = gasTitle[giVideoIndex];
                 
-                var sFileName = gasFileName[giVideoIndex];
+                var sFileName = gasFileName[giVideoIndex] + "." + ext;
                 
                 if (giSite == SITE_BILIBILI)
                 {
@@ -144,15 +152,14 @@ function showVideoUrls() {
                     sInner += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
                     sInner += "<a type='button' href='#' id='goBackID' >" + getI18nMsg("rechoice") + "</a>";
                 }
-                sInner += "</div><hr>";
+                sInner += "</div>";
+                sInner += "<hr>";
                 
-                
-            }
-            
-            if (ob.cover)
-            {
-                sCoverUrl = ob.cover;
-                console.log("[OVP]Cover found:" + sCoverUrl);
+                if (ob.cover)
+                {
+                    sCoverUrl = ob.cover;
+                    console.log("[OVP]Cover found:" + sCoverUrl);
+                }
             }
         }
         
@@ -271,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function() {
         gasTitle = response.titles;
         gasPicUrl = response.picUrls;
         gasFileName = response.fileNames;
-        giVideoIndex = response.videoIndex;
+        //giVideoIndex = response.videoIndex;
         giSite = response.nowSite;
         
         // show download link directly if there is only one video
