@@ -10,6 +10,9 @@ var SITE_BILIBILI = 7;
 var SITE_XXXFK = 8;
 var SITE_THISAV = 9;
 var SITE_FACEBOOK = 10;
+var SITE_XVIDEO = 11;
+var SITE_A9AV = 12;
+var SITE_JKF = 13;
 var SITE_OTHER = 99;
 var giSite = SITE_OTHER;
 
@@ -78,6 +81,18 @@ function setSite()
     else if (sUrl.indexOf("facebook.com") > 0)
     {
         giSite = SITE_FACEBOOK;
+    }
+    else if (sUrl.indexOf("xvideos.com") > 0)
+    {
+        giSite = SITE_XVIDEO;
+    }
+    else if (sUrl.indexOf("a9av.com") > 0)
+    {
+        giSite = SITE_A9AV;
+    }
+    else if (sUrl.indexOf("107.170.52") > 0)
+    {
+        giSite = SITE_JKF;
     }
     else
     {
@@ -385,6 +400,34 @@ function getAllTitle()
             asTitle[0] = eTitle.innerHTML.split(" - ")[0].replace("Watch Online", "").trim();
         }
     }
+    else if (giSite == SITE_A9AV)
+    {
+        var eTitle = document.getElementById("thread_subject");
+        if (eTitle)
+        {
+            asTitle[0] = eTitle.innerHTML.trim();
+            
+            // copy text for the cover only
+            sendCopyText(asTitle[0], 0);
+        }
+        /*
+        else 
+        {
+            eTitle = document.getElementsByTagName("title")[0];
+            asTitle[0] = eTitle.innerHTML.split(" - ")[0].trim();
+        }
+        */
+    }
+    else if (giSite == SITE_JKF)
+    {
+        var ePosts = document.getElementsByClassName("t_fsz");
+        if (ePosts && ePosts.length > 0)
+        {
+            var eTitle = document.getElementsByTagName("title")[0];
+            asTitle[0] = eTitle.innerHTML.split(" - ")[0].trim();
+            sendCopyText(asTitle[0], 0);
+        }
+    }
     else if (giSite == SITE_BILIBILI)
     {
         var eTitle = document.getElementsByTagName("title")[0];
@@ -407,16 +450,27 @@ function getAllTitle()
     {
         var sSplitToken = " - ";
         var aeTitle = document.getElementsByTagName("title");
+        var asTemp = aeTitle[0].innerHTML.split(sSplitToken);
+        
 
-        if (aeTitle.length)
+        for (var i = 0; i < asTemp.length - 1; i ++)
         {
-            var sHTML = aeTitle[0].innerHTML.split(sSplitToken)[0];
-            var iBegin = 0;
-            var iEnd = sHTML.length;
-            asTitle[0] = sHTML.substring(iBegin, iEnd).trim();
+            if (i == 0)
+            {
+                asTitle[0] = "";
+            }
+            else
+            {
+                asTitle[0] += " - ";
+            }
+
+            asTitle[0] += asTemp[i].trim();
         }
         
-       
+        if (asTitle.length == 0)
+        {
+            asTitle[0] = aeTitle[0].innerHTML.trim(); // final choice
+        }
     }
     
     console.log("[OVP]getAllTitle:" + asTitle);
@@ -469,6 +523,21 @@ function getAllPicUrl()
             sTag = asTemp[1].split("/")[0];
             asPic[0] = "http://images.thisav.com/images/videothumbs/" + sTag + "-1.jpg";
         }
+    }
+    else if (giSite == SITE_XVIDEO)
+    {
+        var eDiv = document.getElementById("player");
+        
+        if (eDiv)
+        {
+            var sHtml = eDiv.innerHTML;
+            var iBegin = sHtml.indexOf("thumbslll");
+            var iEnd = sHtml.indexOf("&amp;", iBegin);
+            iBegin = sHtml.lastIndexOf("http:", iEnd);
+            
+            asPic[0] = sHtml.substring(iBegin, iEnd);
+        }
+        
     }
     else
     {
