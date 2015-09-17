@@ -139,7 +139,7 @@ function showVideoUrls() {
                 
                 if (giSite == SITE_BILIBILI)
                 {
-                    sFileName = ob.title;
+                    //sFileName = ob.title;
                 }
 
                 sInner += "<b>&nbsp;&nbsp;&nbsp;" + sFileName + "</b><br>"

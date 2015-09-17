@@ -156,18 +156,18 @@ var vdl = {
         var isVideo = true;
         var priority = 0;
         var bNeedGetPlayUrl = false;
-		var bNoLength = false;
+        var bNoLength = false;
         
         for (var i = 0; i < details.responseHeaders.length; ++i) {
 
-			//console.log("[OVP]Name:" + details.responseHeaders[i].name + "  MINE:" + details.responseHeaders[i].value + "  URL:" + details.url);
+            //console.log("[OVP]Name:" + details.responseHeaders[i].name + "  MINE:" + details.responseHeaders[i].value + "  URL:" + details.url);
         
             if (details.responseHeaders[i].name.toLowerCase() === 'content-type' ||
-				details.responseHeaders[i].name === "x-content-type-options") {
+                details.responseHeaders[i].name === "x-content-type-options") {
                 var mime = details.responseHeaders[i].value;
                 var url = details.url;
                 
-                //console.log("[OVP]Content-Type: MIME:" + mime + "  URL:" + url);
+                console.log("[OVP]Content-Type: MIME:" + mime + "  URL:" + url);
                 
                 //if (url.indexOf("videoplayback") > 0) alert(url);
                 
@@ -189,13 +189,13 @@ var vdl = {
                             {
                                 bNeedGetPlayUrl = true;
                             }
-							else if (mime.indexOf("nosniff") >= 0)
+                            else if (mime.indexOf("nosniff") >= 0)
                             {
                                 bNoLength = true;
                             }
-							
-							
-							//console.log("[OVP]This is video:" + url);
+                            
+                            
+                            //console.log("[OVP]This is video:" + url);
                             
                             break;
                         }

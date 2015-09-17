@@ -16,6 +16,8 @@ var SITE_JKF = 13;
 var SITE_OTHER = 99;
 var giSite = SITE_OTHER;
 
+var gasExternID = [];
+
 initLoader();
 //document.addEventListener('DOMContentLoaded', initLoader);
 window.onload = onloadAndReloadCheck;
@@ -30,6 +32,10 @@ function initLoader()
     if (giSite == SITE_TWDVD)
     {
         addDownloadPicButton();
+    }
+    else
+    {
+        addExternLinkButton();
     }
 }
 
@@ -90,7 +96,7 @@ function setSite()
     {
         giSite = SITE_A9AV;
     }
-    else if (sUrl.indexOf("107.170.52") > 0)
+    else if (sUrl.indexOf("107.170.52.154") > 0)
     {
         giSite = SITE_JKF;
     }
@@ -277,6 +283,52 @@ function setTitleAndPicUrl()
     });
 }
 
+function existFlashxTV()
+{
+    var eBody = document.getElementsByTagName("body")[0];
+    
+    return eBody.innerHTML.indexOf("src=\"http://www.flashx.tv/") > 0;
+}
+
+function addExternLinkButton()
+{
+    if (!existFlashxTV())
+    {
+        console.log("Not Exist Flashx");
+        return;
+    }
+  
+    var eBody = document.getElementsByTagName("body")[0];
+    var sHtml = eBody.innerHTML;
+    
+    var sTag = "src=\"http://www.flashx.tv/";
+    var iBegin = sHtml.indexOf(sTag) + sTag.length;
+    var iEnd = sHtml.indexOf(".html", iBegin);
+    var sId = sHtml.substring(iBegin, iEnd);
+    
+    
+    if (sId.split("-").length == 3)
+    {
+        sId = sId.split("-")[1];
+    }
+    
+    console.log("Exist Flashx ID: " + sId);
+    
+    var eTitle = document.getElementsByTagName("h1")[0];
+    
+    var eDiv = document.createElement("hr");
+    eTitle.appendChild(eDiv);
+    
+    eDiv = document.createElement("a");
+    eDiv.href = "http://www.tubeoffline.com/download.php?host=flashxTV&video=http://www.flashx.tv/" + sId + ".html";
+    eDiv.target = "_blank";
+    eDiv.innerHTML = "▣ 解析影片(以IE瀏覽器開啟) ▣";// + gasExternID[i];
+    eTitle.appendChild(eDiv);
+    
+    eDiv = document.createElement("hr");
+    eTitle.appendChild(eDiv);
+}
+
 function addDownloadPicButton()
 {
     var asPicUrl = getAllPicUrl();
@@ -288,16 +340,33 @@ function addDownloadPicButton()
     {
         var asTemp = asPicUrl[i].split("/");
         var sFileName = asFileName[i];//asTitle[i] + asTemp[asTemp.length-1];
+        
+        var eDiv = document.createElement("hr");
+        aeTitle[i].appendChild(eDiv);
 
-        var eDiv = document.createElement("a");
+        eDiv = document.createElement("a");
         eDiv.href = asPicUrl[i];
         eDiv.download = sFileName;
-        eDiv.innerHTML = ">&nbsp;下載封面(按右鍵另存新檔)&nbsp;<";
+        eDiv.innerHTML = "&nbsp;下載封面(按右鍵另存新檔)&nbsp;&nbsp;&nbsp;&nbsp;";
         //eDiv.innerHTML = "<a download='" + sFileName + "' href='" + asPicUrl[i] + "' >>>&nbsp;下載封面&nbsp;<<</a>";
         eDiv.iVideoIndex = i;
         eDiv.addEventListener('touchstart', clickVideo, false);
         eDiv.addEventListener('click', clickVideo, false);
         aeTitle[i].appendChild(eDiv);
+        
+        if (gasExternID[i])
+        {
+            eDiv = document.createElement("a");
+            eDiv.href = "http://www.tubeoffline.com/download.php?host=flashxTV&video=http://www.flashx.tv/" + gasExternID[i] + ".html";
+            eDiv.target = "_blank";
+            //eDiv.download = sFileName;
+            eDiv.innerHTML = "&nbsp;&nbsp;&nbsp;解析影片(以IE瀏覽器開啟)&nbsp;";// + gasExternID[i];
+            eDiv.iVideoIndex = i;
+            //eDiv.addEventListener('touchstart', clickVideo, false);
+            //eDiv.addEventListener('click', clickVideo, false);
+            aeTitle[i].appendChild(eDiv);
+        }
+        
         
         var eDiv = document.createElement("div");
         eDiv.innerHTML = "<hr>格式化檔名 : <u>" + sFileName + "</u>";
@@ -490,11 +559,28 @@ function getAllPicUrl()
         for ( var i = 0; i < aePic.length; i ++ )
         {
             var sHTML = aePic[i].innerHTML;
-            var iBegin = sHTML.indexOf("image=") + 6;
-            var iEnd = sHTML.indexOf("\"", iBegin);
+
+            var sTag = "http://www.flashx.tv/embed-";
+            
+            var iBegin = sHTML.indexOf(sTag) + sTag.length;
+            var iEnd = sHTML.indexOf("-640x360", iBegin);
+            if (iBegin > sTag.length && iEnd > iBegin)
+            {
+                gasExternID[i] = sHTML.substring(iBegin, iEnd);
+            }
+            else
+            {
+                gasExternID[i] = null;
+            }
+            
+            iBegin = sHTML.indexOf("image=") + 6;
+            iEnd = sHTML.indexOf("\"", iBegin);
             asPic[i] = sHTML.substring(iBegin, iEnd);
             
+            //console.log("-->" + sHTML.substring(0, iBegin));
         }    
+        
+        
     }
     else if (giSite == SITE_BILIBILI)
     {
