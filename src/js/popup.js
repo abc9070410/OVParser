@@ -257,7 +257,10 @@ function clickGoBack()
     showVideoUrls();
 }
 
+
 document.addEventListener('DOMContentLoaded', function() {
+    console.log("[OVP]popup DOMContentLoaded");
+  
     var query = window.location.search.substring(1);
     console.log(query, 11, window.location.search);
     var popupText = ["idvideo"];

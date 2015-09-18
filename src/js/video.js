@@ -66,6 +66,11 @@ var vdl = {
             urlParts: ["youporn", ".flv"],
             isVideo: true,
             p: 1
+        }, {
+            mime: "plain",
+            urlParts: ["xvideos.com", ".flv?"],
+            isVideo: true,
+            p: 1
         }, /*{
             mime: "plain",
             urlParts: ["youtube.com", "videoplayback", "range"],
@@ -130,6 +135,11 @@ var vdl = {
     },
 
     launchu: function(id, change, tab) {
+        vdl.lasturl[id] = tab.url;
+        vdl.videolist[id] = false;
+        vdl.urllist[id] = false;
+        vdl.statlist[id] = false;
+        /*
         if (vdl.lasturl[id] != tab.url) {
             vdl.lasturl[id] = tab.url;
             vdl.videolist[id] = false;
@@ -141,6 +151,7 @@ var vdl = {
                 path: "../images/logo19.png"
             });
         }
+        */
         
         gsNowUrl = tab.url;
         
@@ -167,7 +178,7 @@ var vdl = {
                 var mime = details.responseHeaders[i].value;
                 var url = details.url;
                 
-                console.log("[OVP]Content-Type: MIME:" + mime + "  URL:" + url);
+                //console.log("[OVP]Content-Type: MIME:" + mime + "  URL:" + url);
                 
                 //if (url.indexOf("videoplayback") > 0) alert(url);
                 

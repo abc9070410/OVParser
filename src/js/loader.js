@@ -22,8 +22,19 @@ initLoader();
 //document.addEventListener('DOMContentLoaded', initLoader);
 window.onload = onloadAndReloadCheck;
 
+function initData()
+{
+    chrome.extension.sendMessage({
+      msg: "InitData"
+    }, function(response) {
+      
+    });
+}
+
 function initLoader()
 {
+    initData();
+  
     setSite();
 
     setPopWindowSize();
@@ -315,7 +326,13 @@ function addExternLinkButton()
     console.log("Exist Flashx ID: " + sId);
     
     var eTitle = document.getElementsByTagName("h1")[0];
+    eTitle.addEventListener("click", function() {
+        var asTitle = getAllTitle();
+        sendCopyText(asTitle[0], 0);
+    }, false);
     
+    
+    var eTitle = document.getElementsByTagName("h1")[0];
     var eDiv = document.createElement("hr");
     eTitle.appendChild(eDiv);
     
@@ -347,11 +364,15 @@ function addDownloadPicButton()
         eDiv = document.createElement("a");
         eDiv.href = asPicUrl[i];
         eDiv.download = sFileName;
-        eDiv.innerHTML = "&nbsp;下載封面(按右鍵另存新檔)&nbsp;&nbsp;&nbsp;&nbsp;";
+        eDiv.innerHTML = "▣ 下載封面(按右鍵另存新檔) ▣";
         //eDiv.innerHTML = "<a download='" + sFileName + "' href='" + asPicUrl[i] + "' >>>&nbsp;下載封面&nbsp;<<</a>";
         eDiv.iVideoIndex = i;
         eDiv.addEventListener('touchstart', clickVideo, false);
         eDiv.addEventListener('click', clickVideo, false);
+        aeTitle[i].appendChild(eDiv);
+        
+        eDiv = document.createElement("b");
+        eDiv.innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp";
         aeTitle[i].appendChild(eDiv);
         
         if (gasExternID[i])
@@ -360,7 +381,7 @@ function addDownloadPicButton()
             eDiv.href = "http://www.tubeoffline.com/download.php?host=flashxTV&video=http://www.flashx.tv/" + gasExternID[i] + ".html";
             eDiv.target = "_blank";
             //eDiv.download = sFileName;
-            eDiv.innerHTML = "&nbsp;&nbsp;&nbsp;解析影片(以IE瀏覽器開啟)&nbsp;";// + gasExternID[i];
+            eDiv.innerHTML = "▣ 解析影片(以IE瀏覽器開啟) ▣";// + gasExternID[i];
             eDiv.iVideoIndex = i;
             //eDiv.addEventListener('touchstart', clickVideo, false);
             //eDiv.addEventListener('click', clickVideo, false);
