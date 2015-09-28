@@ -13,6 +13,7 @@ var SITE_FACEBOOK = 10;
 var SITE_XVIDEO = 11;
 var SITE_A9AV = 12;
 var SITE_JKF = 13;
+var SITE_85ST = 14;
 var SITE_OTHER = 99;
 var giSite = SITE_OTHER;
 
@@ -110,6 +111,10 @@ function setSite()
     else if (sUrl.indexOf("107.170.52.154") > 0)
     {
         giSite = SITE_JKF;
+    }
+    else if (sUrl.indexOf("85st.com/") > 0)
+    {
+        //giSite = SITE_85ST;
     }
     else
     {
@@ -541,9 +546,9 @@ function getAllTitle()
         var sSplitToken = " - ";
         var aeTitle = document.getElementsByTagName("title");
         var asTemp = aeTitle[0].innerHTML.split(sSplitToken);
-        
+        var i;
 
-        for (var i = 0; i < asTemp.length - 1; i ++)
+        for (i = 0; i < asTemp.length - 1; i ++)
         {
             if (i == 0)
             {
@@ -560,6 +565,27 @@ function getAllTitle()
         if (asTitle.length == 0)
         {
             asTitle[0] = aeTitle[0].innerHTML.trim(); // final choice
+        }
+        
+        var eBody = document.getElementsByTagName("body")[0];
+        var sHTML = eBody.innerHTML;
+        
+        var iEnd = sHTML.indexOf("pl.jpg");
+        if (iEnd > 0)
+        {
+            var iBegin = sHTML.lastIndexOf(">", iEnd) + 1;
+            var sTemp = sHTML.substring(iBegin, iEnd).trim().toUpperCase();
+            
+            for (i = 0; i < sTemp.length; i++)
+            {
+                if (!isNaN(sTemp.substring(i, i + 1)))
+                {
+                    break;
+                }
+            }
+            
+            var sVideoNo = sTemp.substring(0, i) + "-" + sTemp.substring(i, sTemp.length);
+            asTitle[0] = sVideoNo + "_" + asTitle[0];
         }
     }
     
