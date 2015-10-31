@@ -16,10 +16,15 @@ var SITE_JKF = 13;
 var SITE_85ST = 14;
 var SITE_AVYAHOO = 15;
 var SITE_HICHANNEL = 16;
+var SITE_STREAMINTO = 17;
 var SITE_OTHER = 99;
 var giSite = SITE_OTHER;
 
 var gasExternID = [];
+
+
+var RESPONSE_NEED_CLICK_BUTTON = "5566";
+var RESPONSE_FILE_DELETED = "5577";
 
 initLoader();
 //document.addEventListener('DOMContentLoaded', initLoader);
@@ -171,6 +176,10 @@ function setSite()
     else if (sUrl.indexOf("hichannel.hinet.net") > 0)
     {
         giSite = SITE_HICHANNEL;
+    }
+    else if (sUrl.indexOf("streamin.to/") > 0)
+    {
+        giSite = SITE_STREAMINTO;
     }
     else
     {
@@ -419,7 +428,29 @@ function addExternLinkButton()
     }
     
     var sStreaminToUrl = existStreaminTo();
-    if (sStreaminToUrl)
+    
+    if (giSite == SITE_STREAMINTO)
+    {
+        var eBody = document.getElementsByTagName("body")[0];
+        var sHtml = eBody.innerHTML;
+        var sUrl = window.location.href;
+        var sFileName = getRegularFileName(getAllTitle()[0]);
+        var sCommand = getStreamIoBatchText(sHtml, sUrl, sFileName);
+        
+        log("Parse streamin.to : " + sFileName);
+        
+        var sTitle = "▣ 串流影片批次檔 (以外部程式下載) ▣";
+        var eTitle = document.getElementsByTagName("h2")[0];
+        if (sCommand == RESPONSE_FILE_DELETED)
+        {
+            addTextMessage(eTitle, "▣ 影片已被刪除 ▣");
+        }
+        else if (sCommand != RESPONSE_NEED_CLICK_BUTTON)
+        {
+            addBatchFileButton(eTitle, sTitle, sFileName, sCommand);
+        }
+    }
+    else if (sStreaminToUrl)
     {
         console.log("Streamin.to URL: " + sStreaminToUrl);
         
@@ -458,6 +489,11 @@ function addExternLinkButton()
     addElementChild(eTitle, eDiv);
 }
 
+function getRegularFileName(str)
+{
+    return str.trim().replace(/ /g, "_").replace(/\W/g, "");
+}
+
 function sendHttpRequest(sUrl, onReadyFunction)
 {
     var xhr = new XMLHttpRequest();
@@ -472,58 +508,93 @@ function parseStreaminTo()
     if (this.readyState == 4)
     {
         var sHtml = this.responseText;
+        var sUrl = this.url;
         
         console.log("Get Streamin.to html Done : " + sHtml.length);
         
-        var asTemp = [];
-        var sTemp = "";
-        var asToken = sHtml.split(/\s*"\s*,*/g);
-        var sToken = "";
-        var sExtension = ".mp4";
-        
-        var r, a, f, w, p, y, o;
-        
-        f = "WIN 19,0,0,207";
-        p = this.url;
-        o = getAllTitle()[0].split(" ")[0];
-        
-        for (var i = 0; i < asToken.length; i++)
-        {
-            sToken = asToken[i];
-            //log(i + ": [" + asToken[i] + "]");
-            
-            if (sToken.indexOf("streamer:") >= 0)
-            {
-                asTemp = asToken[i + 1].split("vod?h=");
-                r = asTemp[0] + "vod";
-                a = "vod?h=" + asTemp[1]; 
-            }
-            else if (sToken.indexOf(" src:") >= 0)
-            {
-                w = asToken[i + 1];
-            }
-            else if (sToken.indexOf(" file:") >= 0)
-            {
-                sTemp = asToken[i + 1];
-                if (sTemp.indexOf(".flv?") > 0)
-                {
-                    y = "flv:" + sTemp;
-                    sExtension = ".flv";
-                }
-                else
-                {
-                    y = "mp4:" + sTemp;
-                }
-            }
-        }
-        
-        var sCommand = "rtmpdump -r \"" + r + "\" -a \"" + a + "\" -f \"" + f + "\" -W \"" + w + "\" -p \"" + p + "\" -y \"" + y + "\" -o \"" + o + sExtension + "\"";
-        
+        var sFileName = getRegularFileName(getAllTitle()[0]);
+        var sCommand = getStreamIoBatchText(sHtml, sUrl, sFileName);
         log(sCommand);
         
+        var sTitle = "▣ 串流影片批次檔 (以外部程式下載) ▣";
         var eTitle = document.getElementsByTagName("h1")[0];
-        addBatchFileButton(eTitle, "▣ 串流影片批次檔 (以外部程式下載) ▣", o, sCommand);
+        
+        if (sCommand == RESPONSE_FILE_DELETED)
+        {
+            addTextMessage(eTitle, "▣ 影片已被刪除 ▣");
+        }
+        else if (sCommand != RESPONSE_NEED_CLICK_BUTTON)
+        {
+            addBatchFileButton(eTitle, sTitle, sFileName, sCommand);
+        }
     }
+}
+
+function getStreamIoBatchText(sHtml, sUrl, sFileName)
+{
+    var asTemp = [];
+    var sTemp = "";
+    var asToken = sHtml.split(/\s*"\s*,*/g);
+    var sToken = "";
+    var sExtension = ".mp4";
+    
+    var r, a, f, w, p, y, o;
+    
+    f = "WIN 19,0,0,207";
+    p = sUrl;
+    o = sFileName;
+    
+    for (var i = 0; i < asToken.length; i++)
+    {
+        sToken = asToken[i];
+        //log(i + ": [" + asToken[i] + "]");
+        
+        if (sToken.indexOf("streamer:") >= 0)
+        {
+            asTemp = asToken[i + 1].split("vod?h=");
+            r = asTemp[0] + "vod";
+            a = "vod?h=" + asTemp[1]; 
+        }
+        else if (sToken.indexOf(" src:") >= 0)
+        {
+            w = asToken[i + 1];
+        }
+        else if (sToken.indexOf(" file:") >= 0)
+        {
+            sTemp = asToken[i + 1];
+            if (sTemp.indexOf(".flv?") > 0)
+            {
+                y = "flv:" + sTemp;
+                sExtension = ".flv";
+            }
+            else
+            {
+                y = "mp4:" + sTemp;
+            }
+        }
+    }
+    
+    if (!a || !w || !y)
+    {
+        if (sHtml.indexOf("id=\"btn_download\"") > 0)
+        {
+            return RESPONSE_NEED_CLICK_BUTTON;
+        }
+        return RESPONSE_FILE_DELETED;
+    }
+    
+    var sDownCommand = "rtmpdump -r \"" + r + "\" -a \"" + a + "\" -f \"" + f + "\" -W \"" + w + "\" -p \"" + p + "\" -y \"" + y + "\" -o \"" + o + sExtension + "\"";
+    
+    var sBatch = 
+        "chcp 65001\r\n" + 
+        "IF EXIST rtmpdump.exe (\r\n" + 
+        "   " + sDownCommand + "\r\n" + 
+        ") ELSE (\r\n" + 
+        "   echo \"資料夾內找不到rtmpdump.exe，請先下載RTMP下載工具(https://raw.githubusercontent.com/abc9070410/OVParser/master/tools/rtmpdump.exe)，而後放在瀏覽器預設下載資料夾，再執行此bat檔\" > NoRtmpDownloadTool.txt\r\n" +
+        "   start \"NoRtmpDownloadTool Message\" notepad NoRtmpDownloadTool.txt\r\n" +
+        ")\r\n";
+        
+    return sBatch;
 }
 
 function addDownloadPicButton()
@@ -929,9 +1000,28 @@ function addBatchFileButton(eTitle, sTitle, sFileName, sText, bSameLine)
     addElementChild(eTitle, eDiv, bSameLine);
 }
 
+function addTextMessage(eTitle, sText, bSameLine)
+{
+    var eDiv = document.createElement("p");
+    eDiv.innerHTML = sText;
+    addElementChild(eTitle, eDiv, bSameLine);
+}
+
 
 function log(sText)
 {
     console.log("[OVP]" + sText);
 }
 
+/*
+
+chcp 65001
+IF EXIST rtmpdump.exe (
+    echo exists
+) ELSE (
+    echo "資料夾內找不到rtmpdump.exe，請先下載RTMP下載工具(https://raw.githubusercontent.com/abc9070410/OVParser/master/tools/rtmpdump.exe)，而後放在瀏覽器預設下載資料夾" > NoRtmpDownloadTool.txt
+    start "NoRtmpDownloadTool Message" notepad NoRtmpDownloadTool.txt
+)
+
+
+*/
