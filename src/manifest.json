@@ -23,5 +23,5 @@
    "manifest_version": 2,
    "name": "__MSG_appName__",
    "permissions": [ "clipboardRead", "clipboardWrite", "webRequest", "webRequestBlocking", "tabs", "notifications", "storage", "http://*/*", "https://*/*" ],
-   "version": "0.0.2.3"
+   "version": "0.0.2.6"
 }

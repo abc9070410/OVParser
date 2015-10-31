@@ -155,6 +155,18 @@ function showVideoUrls() {
                 sInner += "</div>";
                 sInner += "<hr>";
                 
+                /*
+                // add a button for batch file 
+                var sBatchFileName = gasFileName[giVideoIndex].trim().split(" ")[0];
+                sBatchFileName += ".bat";
+                sInner += "<b>&nbsp;&nbsp;&nbsp;" + sFileName + "</b><br>"
+                sInner += "<div>";
+                sInner += "&nbsp;&nbsp;&nbsp;<a type='button' id='downloadID' value='Download' href='" + getBatchFileUrl(url, "123.mp4") + "' download='" + sBatchFileName + "'>Batch File</a>";
+                sInner += "</div>";
+                sInner += "<hr>";
+                */
+                
+                
                 if (ob.cover)
                 {
                     sCoverUrl = ob.cover;
@@ -207,6 +219,16 @@ function showVideoUrls() {
     {
         console.log("[OVP]:NON");
     }
+}
+
+function getBatchFileUrl(sVideoUrl, sFileName)
+{
+    var sBatch = "bitsadmin.exe /transfer 'JobName1' '" + sVideoUrl + "' 'C:\MY\\" + sFileName + "'";
+    
+    var blob = new Blob([sText], {type: "text/plain;charset=utf-8"});
+    var sUrl = URL.createObjectURL(blob);
+    
+    return sUrl;
 }
 
 function clickDownload()

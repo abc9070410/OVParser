@@ -14,6 +14,8 @@ var SITE_XVIDEO = 11;
 var SITE_A9AV = 12;
 var SITE_JKF = 13;
 var SITE_85ST = 14;
+var SITE_AVYAHOO = 15;
+var SITE_HICHANNEL = 16;
 var SITE_OTHER = 99;
 var giSite = SITE_OTHER;
 
@@ -35,7 +37,8 @@ function initData()
 function initLoader()
 {
     initData();
-  
+    addListener();
+
     setSite();
 
     setPopWindowSize();
@@ -49,6 +52,55 @@ function initLoader()
     {
         addExternLinkButton();
     }
+}
+
+function addListener()
+{
+    chrome.extension.onMessage.addListener(
+        function(request, sender, sendResponse) {
+            if (request.greeting == "SetBatchButton")
+            {
+                log("SetBatchButton HLS : " + request.url);
+                
+                var eDiv = document.getElementById("BATCH_FILE_ID");
+                if (eDiv)
+                {
+                    eDiv.remove();
+                }
+
+                var eTitle = document.getElementsByTagName("h1")[0];
+                var sFileName = getAllTitle()[0];
+                var sTitle = "▣ 串流影音 (以VLC開啟) ▣";
+                
+                if (!eTitle)
+                {
+                    eTitle = document.getElementsByTagName("p")[0];
+                }
+                
+                if (giSite = SITE_HICHANNEL)
+                {
+                    eTitle = document.getElementById("titleName");
+                    //eTitle = document.getElementsByClassName("maincontent")[0];
+                    eDiv = document.getElementsByClassName("name")[0];
+                    sFileName = eDiv.innerHTML.replace(/<\/?\w(?:[^"'>]|"[^"]*"|'[^']*')*>/gmi, '').trim();
+                    
+                    sTitle =  "▣ " + sFileName + "(以VLC開啟) ▣";
+                }
+                
+                log("HLS Batch FileName:" + sFileName);
+
+                var sCommand = getHLSBatchText(request.url);
+                
+                
+                addBatchFileButton(eTitle, sTitle, sFileName, sCommand, true);
+            }
+        }
+    );
+}
+
+function getHLSBatchText(sStreamUrl)
+{
+    return "@echo off \r\nstart \"Radio FM\" \"C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe\"  \"" + sStreamUrl + "\"";
 }
 
 function onloadAndReloadCheck()
@@ -114,14 +166,18 @@ function setSite()
     }
     else if (sUrl.indexOf("85st.com/") > 0)
     {
-        //giSite = SITE_85ST;
+        giSite = SITE_85ST;
+    }
+    else if (sUrl.indexOf("hichannel.hinet.net") > 0)
+    {
+        giSite = SITE_HICHANNEL;
     }
     else
     {
         giSite = SITE_OTHER;
     }
     
-    console.log("[OVP]SetSite:" + giSite + " [" + sUrl + "]");
+    log("SetSite:" + giSite + " [" + sUrl + "]");
 }
 
 function removeSpecificCh(sText)
@@ -277,7 +333,7 @@ function getAllFileName(asTitle, asPicUrl)
         }
     }
     
-    console.log("[OVP]getAllFileName:" + asFileName);
+    log("getAllFileName:" + asFileName);
     
     return asFileName;
 }
@@ -306,8 +362,70 @@ function existFlashxTV()
     return eBody.innerHTML.indexOf("src=\"http://www.flashx.tv/") > 0;
 }
 
+function existStreaminTo()
+{
+    var eBody = document.getElementsByTagName("body")[0];
+    var sHtml = eBody.innerHTML;
+    var iBegin = sHtml.indexOf("http://streamin.to/");
+    var iEnd1 = sHtml.indexOf("\"", iBegin);
+    var iEnd2 = sHtml.indexOf("\'", iBegin);
+    var iEnd = iEnd1 < iEnd2 ? iEnd1 : iEnd2;
+
+    if (iBegin > 0 && iEnd > iBegin)
+    {
+        return sHtml.substring(iBegin, iEnd);
+    }
+    
+    return null;
+}
+
+function addElementChild(eMother, eChild, bSameLine)
+{
+    if (!bSameLine)
+    {
+        eMother.appendChild(document.createElement("hr"));
+    }
+    else if (eMother.innerHTML.indexOf("　　") < 0)
+    {
+        eMother.innerHTML += "　　"
+    }
+    
+    eMother.appendChild(eChild);
+    
+    if (!bSameLine)
+    {
+        eMother.appendChild(document.createElement("hr"));
+    }
+}
+
 function addExternLinkButton()
 {
+    
+    var eTitle = document.getElementsByTagName("h1")[0];
+    
+    if (eTitle)
+    {
+        var sTitle = getAllTitle()[0];
+        /*
+        var eDiv = document.createElement("b");
+        eDiv.innerHTML = "規格化標題 : " + sTitle;
+        addElementChild(eTitle, eDiv);
+        */
+        
+        eTitle.addEventListener("click", function() {
+            //var asTitle = getAllTitle();
+            sendCopyText(sTitle, 0);
+        }, false);
+    }
+    
+    var sStreaminToUrl = existStreaminTo();
+    if (sStreaminToUrl)
+    {
+        console.log("Streamin.to URL: " + sStreaminToUrl);
+        
+        sendHttpRequest(sStreaminToUrl, parseStreaminTo);
+    }
+    
     if (!existFlashxTV())
     {
         console.log("Not Exist Flashx");
@@ -329,26 +447,83 @@ function addExternLinkButton()
     }
     
     console.log("Exist Flashx ID: " + sId);
-    
+
     var eTitle = document.getElementsByTagName("h1")[0];
-    eTitle.addEventListener("click", function() {
-        var asTitle = getAllTitle();
-        sendCopyText(asTitle[0], 0);
-    }, false);
-    
-    
-    var eTitle = document.getElementsByTagName("h1")[0];
-    var eDiv = document.createElement("hr");
-    eTitle.appendChild(eDiv);
-    
-    eDiv = document.createElement("a");
+    var eDiv = document.createElement("a");
     eDiv.href = "http://www.tubeoffline.com/download.php?host=flashxTV&video=http://www.flashx.tv/" + sId + ".html";
     eDiv.target = "_blank";
     eDiv.innerHTML = "▣ 解析影片(以IE瀏覽器開啟) ▣";// + gasExternID[i];
     eTitle.appendChild(eDiv);
     
-    eDiv = document.createElement("hr");
-    eTitle.appendChild(eDiv);
+    addElementChild(eTitle, eDiv);
+}
+
+function sendHttpRequest(sUrl, onReadyFunction)
+{
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = onReadyFunction;
+    xhr.open("GET", sUrl, true);
+    xhr.send();
+    xhr.url = sUrl;
+}
+
+function parseStreaminTo()
+{
+    if (this.readyState == 4)
+    {
+        var sHtml = this.responseText;
+        
+        console.log("Get Streamin.to html Done : " + sHtml.length);
+        
+        var asTemp = [];
+        var sTemp = "";
+        var asToken = sHtml.split(/\s*"\s*,*/g);
+        var sToken = "";
+        var sExtension = ".mp4";
+        
+        var r, a, f, w, p, y, o;
+        
+        f = "WIN 19,0,0,207";
+        p = this.url;
+        o = getAllTitle()[0].split(" ")[0];
+        
+        for (var i = 0; i < asToken.length; i++)
+        {
+            sToken = asToken[i];
+            //log(i + ": [" + asToken[i] + "]");
+            
+            if (sToken.indexOf("streamer:") >= 0)
+            {
+                asTemp = asToken[i + 1].split("vod?h=");
+                r = asTemp[0] + "vod";
+                a = "vod?h=" + asTemp[1]; 
+            }
+            else if (sToken.indexOf(" src:") >= 0)
+            {
+                w = asToken[i + 1];
+            }
+            else if (sToken.indexOf(" file:") >= 0)
+            {
+                sTemp = asToken[i + 1];
+                if (sTemp.indexOf(".flv?") > 0)
+                {
+                    y = "flv:" + sTemp;
+                    sExtension = ".flv";
+                }
+                else
+                {
+                    y = "mp4:" + sTemp;
+                }
+            }
+        }
+        
+        var sCommand = "rtmpdump -r \"" + r + "\" -a \"" + a + "\" -f \"" + f + "\" -W \"" + w + "\" -p \"" + p + "\" -y \"" + y + "\" -o \"" + o + sExtension + "\"";
+        
+        log(sCommand);
+        
+        var eTitle = document.getElementsByTagName("h1")[0];
+        addBatchFileButton(eTitle, "▣ 串流影片批次檔 (以外部程式下載) ▣", o, sCommand);
+    }
 }
 
 function addDownloadPicButton()
@@ -567,6 +742,8 @@ function getAllTitle()
             asTitle[0] = aeTitle[0].innerHTML.trim(); // final choice
         }
         
+        asTitle[0] = asTitle[0].replace(/-\w\w成人影片|-85街論壇|-85st免費a片線上看/g, "");
+        
         var eBody = document.getElementsByTagName("body")[0];
         var sHTML = eBody.innerHTML;
         
@@ -576,6 +753,23 @@ function getAllTitle()
             var iBegin = sHTML.lastIndexOf(">", iEnd) + 1;
             var sTemp = sHTML.substring(iBegin, iEnd).trim().toUpperCase();
             
+            asTemp = sTemp.split(/[a-zA-Z]+/g);
+            var sNum = asTemp[asTemp.length - 1];
+            
+            asTemp = sTemp.split(/\d+/g);
+            var sCompany = asTemp[asTemp.length - 2];
+            
+            var sVideoNo = sCompany + "-" + sNum;
+            
+            var sOldTitle = asTitle[0];
+            if (sCompany && sCompany.length > 3 &&
+                sNum && sNum.length > 2)
+            {
+                sOldTitle = sOldTitle.replace(sCompany, "").replace(sNum, "");
+                sOldTitle = sOldTitle.replace("[]", "").trim();
+            }
+            
+            /*
             for (i = 0; i < sTemp.length; i++)
             {
                 if (!isNaN(sTemp.substring(i, i + 1)))
@@ -585,11 +779,12 @@ function getAllTitle()
             }
             
             var sVideoNo = sTemp.substring(0, i) + "-" + sTemp.substring(i, sTemp.length);
-            asTitle[0] = sVideoNo + "_" + asTitle[0];
+            */
+            asTitle[0] = sVideoNo + " " + sOldTitle;
         }
     }
     
-    console.log("[OVP]getAllTitle:" + asTitle);
+    log("getAllTitle:" + asTitle);
     
     return asTitle;
 }
@@ -685,7 +880,7 @@ function getAllPicUrl()
         }
     }
 
-    console.log("[OVP] Cover:" + asPic);
+    log(" Cover:" + asPic);
     
     return asPic;
 }
@@ -715,4 +910,28 @@ function sendCopyText(sText, iVideoIndex)
     }, function(response) {
       
     });
+    
+    log("COPY TEXT:" + sText);
 }
+
+function addBatchFileButton(eTitle, sTitle, sFileName, sText, bSameLine)
+{
+    var blob = new Blob([sText], {type: "text/plain;charset=utf-8"});
+    var sUrl = URL.createObjectURL(blob);
+
+    var eDiv = document.createElement("a");
+    eDiv.id = "BATCH_FILE_ID";
+    eDiv.href = sUrl;
+    eDiv.download = sFileName + ".bat";
+    eDiv.target = "_blank";
+    eDiv.innerHTML = sTitle;
+
+    addElementChild(eTitle, eDiv, bSameLine);
+}
+
+
+function log(sText)
+{
+    console.log("[OVP]" + sText);
+}
+

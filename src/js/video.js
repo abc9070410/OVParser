@@ -1,6 +1,7 @@
 ﻿var giNowTabId = 0;
 var gsCoverUrl = null;
 var gsNowUrl = "";
+var gbHLSExisted = false;
 
 L64B.video = {
     checkForValidUrl: function(tabId, changeInfo, tab) {
@@ -221,6 +222,22 @@ var vdl = {
                         console.log("[OVP]CoverUrl:" + gsCoverUrl);
                     }
                 }
+                
+                if (/*!gbHLSExisted &&*/ url.indexOf(".m3u8") > 0)
+                {
+                    gbHLSExisted = true;
+                    
+                    console.log("found HLS : " + url);
+                    
+                    chrome.tabs.sendMessage(
+                        details.tabId, {
+                            greeting: "SetBatchButton",
+                            url: url,
+                            tabId: details.tabId
+                        }, 
+                        function(response) {
+                    });
+                }
             }
             if (details.responseHeaders[i].name.toLowerCase() === 'content-length')
             {
@@ -394,6 +411,7 @@ function initVariables()
     giNowTabId = 0;
     gsCoverUrl = null;
     gsNowUrl = "";
+    gbHLSExisted = false;
 }
 
 chrome.webRequest.onHeadersReceived.addListener(vdl.checkObject, {

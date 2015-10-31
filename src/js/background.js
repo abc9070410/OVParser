@@ -210,6 +210,12 @@ var L64B = {
 
                     return true;
                 }
+            } else if (details.msg == "SetBatchButton1") {
+                
+            
+                if (callback) {
+                    return true;
+                }
             }
         }
     },
