@@ -23,14 +23,59 @@ var giSite = SITE_OTHER;
 
 
 
-function addRadioEvent()
+function addListener()
 {
-    for (var i = 0; i < gasTitle.length; i ++ )
-    {
-        document.addEventListener('change', changeHandler, false);
-    }
+    //var eDiv = document.getElementById("BUTTON_ID");
+    //eDiv.addEventListener("click", clickSearchButton);
+
+    chrome.extension.onMessage.addListener(
+        function(request, sender, sendResponse) {
+            if (request.greeting == "SendVideoInfoToPopup")
+            {
+                log("SendVideoInfoToPopup");
+            }
+    });
 }
 
+
+document.addEventListener('DOMContentLoaded', function() {
+    log("popup DOMContentLoaded");
+    
+    addListener();
+  
+    var query = window.location.search.substring(1);
+    console.log(query, 11, window.location.search);
+    var popupText = ["idvideo"];
+    for (i = 0; i < popupText.length; i++) {
+        var ob = document.getElementById(popupText[i]);
+        if (ob)
+            ob.innerHTML = getI18nMsg(popupText[i]);
+    }
+
+    var j = query.indexOf("&tabid=");
+    if (j >= 0)
+        giCurrentTabId = parseInt(query.slice(j + 7));
+    
+    getVideoInfo();
+
+    var divs = document.querySelectorAll('div');
+    for (var i = 0; i < divs.length; i++) {
+        if (divs[i].className == "vdlButton") {
+        } else if (divs[i].className == "idvideo") {
+            //Show video list
+            if (divs[i].id == "idvideo")
+            {
+                //divs[i].addEventListener('click', OnSP24NavigateVideo);
+                
+                log("addEventListener click : " + i);
+                
+                //giVideoIndex = i;
+                //showVideoUrls();
+            } 
+        }
+    }
+
+});
 
 function getRadioItem()
 {
@@ -39,18 +84,15 @@ function getRadioItem()
     sInner += "<form>";
     for (var i = 0; i < gasTitle.length; i ++)
     {
-        sInner += "<input type='radio' name='radioName' class='radioTitle' onclick='handleRadioClick(this);' value='" + i + "'>" + gasTitle[i] + "</input><br>";
+        sInner += "<input type='radio' name='radioName' class='radioTitle' value='" + i + "'>" + gasTitle[i] + "</input><br>";
+        
+        log("getRadioItem : " + i + ":" + gasTitle[i]);
     }
     sInner += "</form>";
     
     
     return sInner;
 }
-
-function handleRadioClick(eRadio)
-{
-}
-
 
 function GetFileExtension(ob) {
     var ext = ["flv", "mp4", "3g", "wmv", "mpg", "m4p", "m4v"];
@@ -68,7 +110,9 @@ function GetFileExtension(ob) {
 }
 
 
-function OnSP24NavigateVideo() {
+function OnSP24NavigateVideo() 
+{
+    log("OnSP24NavigateVideo_");
 }
 
 function getFilename(d) {
@@ -88,19 +132,27 @@ function getFilename(d) {
     return s;
 }
 
-var curTabId = 0;
-var videoUrls = 0;
+var giCurrentTabId = 0;
+var gaVideoUrls;
 
 function showVideoUrls() {
     var sCoverUrl = null;
-    var sInner = "";
-    if (!videoUrls) {
+    var sInner = "<a type='button' href='#' id='reloadID' >Reload</a><hr>";
+    
+    if (!gaVideoUrls) {
         sInner += getRadioItem();
-        
     }
-    if (videoUrls) {
-        for (var i = 0; i < videoUrls.length; i++) {
-            var ob = videoUrls[i];
+    
+    if (giVideoIndex >= 0)
+    {
+        //alert(giVideoIndex + "," + gaVideoUrls);
+    }
+
+    if (gaVideoUrls) {
+        log("showVideoUrls : " + gaVideoUrls[0].url);
+        
+        for (var i = 0; i < gaVideoUrls.length; i++) {
+            var ob = gaVideoUrls[i];
             var url = ob.url;
             var ext = GetFileExtension(ob);
             if (!i)
@@ -124,7 +176,6 @@ function showVideoUrls() {
                 var iVideoSize = Math.floor(ob.len * 10 / 1024 / 1024) / 10;
                 sInner += "<div class='wrap' style=''><div class='clFileExt' style='background-color:" + color + "555'>" + iVideoSize + " MB</div>";
             }
-                
 
             if (giVideoIndex < 0)
             {
@@ -152,25 +203,14 @@ function showVideoUrls() {
                     sInner += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
                     sInner += "<a type='button' href='#' id='goBackID' >" + getI18nMsg("rechoice") + "</a>";
                 }
+
                 sInner += "</div>";
                 sInner += "<hr>";
-                
-                /*
-                // add a button for batch file 
-                var sBatchFileName = gasFileName[giVideoIndex].trim().split(" ")[0];
-                sBatchFileName += ".bat";
-                sInner += "<b>&nbsp;&nbsp;&nbsp;" + sFileName + "</b><br>"
-                sInner += "<div>";
-                sInner += "&nbsp;&nbsp;&nbsp;<a type='button' id='downloadID' value='Download' href='" + getBatchFileUrl(url, "123.mp4") + "' download='" + sBatchFileName + "'>Batch File</a>";
-                sInner += "</div>";
-                sInner += "<hr>";
-                */
-                
                 
                 if (ob.cover)
                 {
                     sCoverUrl = ob.cover;
-                    console.log("[OVP]Cover found:" + sCoverUrl);
+                    log("Cover found:" + sCoverUrl);
                 }
             }
         }
@@ -187,7 +227,7 @@ function showVideoUrls() {
         
         if (sPicUrl)
         {
-            sInner += "<img src='" + sPicUrl + "' style='width:100%; height:100%;' ></img>";
+            //sInner += "<img src='" + sPicUrl + "' style='width:100%; height:100%;' ></img>";
         }
     }
     var o = document.getElementById("idVideos");
@@ -197,6 +237,7 @@ function showVideoUrls() {
     
     var eDown = document.getElementById("downloadID");
     var eGoBack = document.getElementById("goBackID");
+    var eReload = document.getElementById("reloadID");
     var aeRadio = document.getElementsByClassName("radioTitle");
     
     if (eDown)
@@ -207,17 +248,22 @@ function showVideoUrls() {
     {
         eGoBack.addEventListener('click', clickGoBack, false);
     }
-    else if (aeRadio)
+    if (eReload)
+    {
+        eReload.addEventListener('click', clickReload, false);
+    }
+    if (aeRadio)
     {
         for (var i = 0; i < aeRadio.length; i ++)
         {
             aeRadio[i].index = i;
             aeRadio[i].addEventListener('change', clickRadio, false);
+            log("addEventListener : " + i);
         }
     }
     else
     {
-        console.log("[OVP]:NON");
+        log(":NON");
     }
 }
 
@@ -269,6 +315,7 @@ function closePopWindow()
 
 function clickRadio(event)
 {
+    log("clickRadio : " + event.target.index);
     giVideoIndex = event.target.index;
     showVideoUrls();
 }
@@ -279,27 +326,21 @@ function clickGoBack()
     showVideoUrls();
 }
 
+function clickReload()
+{
+    log("clickReload");
+    getVideoInfo();
+}
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("[OVP]popup DOMContentLoaded");
-  
-    var query = window.location.search.substring(1);
-    console.log(query, 11, window.location.search);
-    var popupText = ["idvideo"];
-    for (i = 0; i < popupText.length; i++) {
-        var ob = document.getElementById(popupText[i]);
-        if (ob)
-            ob.innerHTML = getI18nMsg(popupText[i]);
-    }
 
-    var j = query.indexOf("&tabid=");
-    if (j >= 0)
-        curTabId = parseInt(query.slice(j + 7));
+function getVideoInfo()
+{
     chrome.extension.sendMessage({
         msg: "OnSP24GetVideoUrls",
-        tabId: curTabId
+        tabId: giCurrentTabId
     }, function(response) {
-        videoUrls = response.videoUrls;
+        log("getVideoInfo:" + response.videoUrls);
+        gaVideoUrls = response.videoUrls;
         gasTitle = response.titles;
         gasPicUrl = response.picUrls;
         gasFileName = response.fileNames;
@@ -314,17 +355,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         showVideoUrls();
     });
-
-    var divs = document.querySelectorAll('div');
-    for (var i = 0; i < divs.length; i++) {
-        if (divs[i].className == "vdlButton") {
-        } else if (divs[i].className == "idvideo") {
-            //Show video list
-            if (divs[i].id == "idvideo")
-                divs[i].addEventListener('click', OnSP24NavigateVideo);
-        }
-    }
-});
+}
 
 function getI18nMsg(msgname) {
     try {
@@ -338,4 +369,10 @@ function clearVideoInfo() {
     chrome.extension.sendMessage({
         msg: "ClearVideoInfo"
     }, function(response) {});
+}
+
+function log(sText)
+{
+    //console.log("[OVP.P]" + sText);
+    chrome.extension.getBackgroundPage().console.log("[OVP.P]" + sText);
 }

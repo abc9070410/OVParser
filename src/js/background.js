@@ -8,6 +8,7 @@ var giVideoIndex = -1;
 var giSite = -1;
 */
 var gasData = [];
+var gaBackupUrl = [];
 
 function copyTextToClipboard(text) {
     var eBody = document.getElementsByTagName("body")[0];
@@ -80,25 +81,54 @@ var L64B = {
                     }, function(tab) {});
             }
             if (details.msg == "OnSP24GetVideoUrls") {
-                //console.log("OnSP24GetVideoUrls");
+                log2("OnSP24GetVideoUrls.");
                 if (callback) {
                     chrome.tabs.query({active: true}, function (arrayOfTabs) {
                         var tabId = arrayOfTabs[0].id;
 
+                        if (vdl.urllist[tabId])
+                        {
+                            if (!gaBackupUrl[tabId] || gaBackupUrl[tabId].length < vdl.urllist[tabId].length)
+                            {
+                                gaBackupUrl[tabId] = vdl.urllist[tabId];
+                                
+                                log2("Update URL cnt:" + vdl.urllist[tabId].length);
+                            }
+                            else
+                            {
+                                log2("No URL: " + gaBackupUrl[tabId] + "," + gaBackupUrl[tabId].length + " < " + vdl.urllist[tabId].length + " ?");
+                            }
+                        }
+                        else
+                        {
+                            log2("No vdl.urllist[" + tabId + "]");
+                        }
+
                         chrome.tabs.get(details.tabId, function(tab) {
-                            callback({
-                                videoUrls: vdl.urllist[tabId],
-                                titles: gasData[tabId].gasTitle,
-                                picUrls: gasData[tabId].gasPicUrl,
-                                fileNames: gasData[tabId].gasFileName,
-                                videoIndex: gasData[tabId].giVideoIndex,
-                                nowSite: gasData[tabId].giSite
-                            })
+                            //if (gasData[tabId])
+                            {
+                                callback({
+                                    videoUrls: gaBackupUrl[tabId],
+                                    titles: gasData[tabId].gasTitle,
+                                    picUrls: gasData[tabId].gasPicUrl,
+                                    fileNames: gasData[tabId].gasFileName,
+                                    videoIndex: gasData[tabId].giVideoIndex,
+                                    nowSite: gasData[tabId].giSite
+                                });
+                            }
                         });
                     });
 
                     return true;
                 }
+            } else if (details.msg == "SendVideoInfoToBackground") {
+                log2("SendVideoInfoToBackground");
+                
+                chrome.extension.sendMessage({
+                    msg: "SendVideoInfoToPopup",
+                    tabId: details.tabId
+                }, function(response) {
+                });
             } else if (details.msg == "SetVideoIndex") {
                 chrome.tabs.query({active: true}, function (arrayOfTabs) {
                     var tabId = arrayOfTabs[0].id;
@@ -109,7 +139,7 @@ var L64B = {
                     }
 
                     gasData[tabId].giVideoIndex = details.videoIndex;
-                    console.log("[OVP]SetVideoIndex:" + gasData[tabId].giVideoIndex);
+                    log2("SetVideoIndex:" + gasData[tabId].giVideoIndex);
                 });
                 if (callback) {
                     return true;
@@ -129,7 +159,7 @@ var L64B = {
                     
                     copyTextToClipboard(sText);
                     
-                    console.log("[OVP]CopyText:" + sText);
+                    log2("CopyText:" + sText);
                 });
                 
                 if (callback) {
@@ -141,9 +171,9 @@ var L64B = {
                     
                     gasData[tabId] = new Object();
                     
+                    gaBackupUrl = [];
                     
-                    
-                    console.log("[OVP][ID:" + tabId + "] Init");
+                    log2("[ID:" + tabId + "] Init");
                 });
             } else if (details.msg == "SetTitleAndPicUrl") {
                 chrome.tabs.query({active: true}, function (arrayOfTabs) {
@@ -170,18 +200,11 @@ var L64B = {
                     {
                         gasData[tabId].giSite = details.nowSite;
                     }
-                    console.log("[OVP][ID:" + tabId + "][SITE:" + gasData[tabId].giSite + "][setTitleAndPicUrl:" + gasData[tabId].gasTitle + "][" + gasData[tabId].gasPicUrl + "]");
+                    log2("[ID:" + tabId + "][SITE:" + gasData[tabId].giSite + "][setTitleAndPicUrl:" + gasData[tabId].gasTitle + "][" + gasData[tabId].gasPicUrl + "]");
                 });
                 
                 if (callback) {
                     
-                    return true;
-                }
-            } else if (details.msg == "currentVideoInfo") {
-                if (callback) {
-                    chrome.tabs.getSelected(undefined, function(tab) {
-                        callback(tab);
-                    });
                     return true;
                 }
             } else if (details.msg == "ClearVideoInfo") {
@@ -192,27 +215,6 @@ var L64B = {
                     gasData[tabId] = new Object();
                 });
                 
-                if (callback) {
-                    return true;
-                }
-            } else if (details.msg == "GetSiteId") {
-
-                if (callback) {
-                    chrome.tabs.query({active: true}, function (arrayOfTabs) {
-                        var tabId = arrayOfTabs[0].id;
-
-                        chrome.tabs.get(details.tabId, function(tab) {
-                            callback({
-                                nowSite: gasData[tabId].giSite
-                            })
-                        });
-                    });
-
-                    return true;
-                }
-            } else if (details.msg == "SetBatchButton1") {
-                
-            
                 if (callback) {
                     return true;
                 }
@@ -228,8 +230,15 @@ var L64B = {
             if (L64B.search.lastUrl == details.url)
                 return;
             L64B.search.lastUrl = details.url;
-            console.log("--- new search url" + details.url);
+            log2("--- new search url" + details.url);
         }
     }
 }
 chrome.extension.onMessage.addListener(L64B.startpage.onMessage);
+
+
+function log2(sText)
+{
+    console.log("[OVP.B]" + sText);
+    //chrome.extension.getBackgroundPage().console.log("[OVP.B]" + sText);
+}

@@ -17,11 +17,11 @@ var SITE_85ST = 14;
 var SITE_AVYAHOO = 15;
 var SITE_HICHANNEL = 16;
 var SITE_STREAMINTO = 17;
+var SITE_ALLUCEE = 18;
 var SITE_OTHER = 99;
 var giSite = SITE_OTHER;
 
 var gasExternID = [];
-
 
 var RESPONSE_NEED_CLICK_BUTTON = "5566";
 var RESPONSE_FILE_DELETED = "5577";
@@ -32,6 +32,7 @@ window.onload = onloadAndReloadCheck;
 
 function initData()
 {
+    log("initData");
     chrome.extension.sendMessage({
       msg: "InitData"
     }, function(response) {
@@ -42,9 +43,8 @@ function initData()
 function initLoader()
 {
     initData();
-    addListener();
-
     setSite();
+    addListener();
 
     setPopWindowSize();
     setTitleAndPicUrl();
@@ -61,6 +61,42 @@ function initLoader()
 
 function addListener()
 {
+    var eTitle = document.getElementsByTagName("h1")[0];
+    
+    if (eTitle)
+    {
+        var sTitle = getAllTitle()[0];
+
+        eTitle.addEventListener("click", function() {
+            //var asTitle = getAllTitle();
+            sendCopyText(sTitle, 0);
+        }, false);
+    }
+    
+    if (giSite == SITE_ALLUCEE)
+    {
+        
+            
+        var aeDiv = document.getElementsByClassName("clickable"); // 27
+        
+
+        for (var i = 0; i < aeDiv.length; i++)
+        {
+            addTextMessage(aeDiv[i], "▣ 影片 ▣");
+            aeDiv[i].index = i;
+            aeDiv[i].addEventListener("click", function() {
+                var aeDiv2 = document.getElementsByClassName("sourcetitle"); // 22
+                if (aeDiv2[this.index - 4])
+                {
+                    var sTitle = aeDiv2[this.index - 4].innerHTML.split(" - ")[0].trim();
+                    window.stop();
+                    sendCopyText(sTitle, 0);
+                }
+            }, false);
+        }
+        
+    }
+    
     chrome.extension.onMessage.addListener(
         function(request, sender, sendResponse) {
             if (request.greeting == "SetBatchButton")
@@ -103,9 +139,10 @@ function addListener()
     );
 }
 
+
 function getHLSBatchText(sStreamUrl)
 {
-    return "@echo off \r\nstart \"Radio FM\" \"C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe\"  \"" + sStreamUrl + "\"";
+    return "@echo off \r\nstart \"C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe\"  \"" + sStreamUrl + "\"";
 }
 
 function onloadAndReloadCheck()
@@ -180,6 +217,10 @@ function setSite()
     else if (sUrl.indexOf("streamin.to/") > 0)
     {
         giSite = SITE_STREAMINTO;
+    }
+    else if (sUrl.indexOf("alluc.ee/") > 0)
+    {
+        giSite = SITE_ALLUCEE;
     }
     else
     {
@@ -409,24 +450,6 @@ function addElementChild(eMother, eChild, bSameLine)
 
 function addExternLinkButton()
 {
-    
-    var eTitle = document.getElementsByTagName("h1")[0];
-    
-    if (eTitle)
-    {
-        var sTitle = getAllTitle()[0];
-        /*
-        var eDiv = document.createElement("b");
-        eDiv.innerHTML = "規格化標題 : " + sTitle;
-        addElementChild(eTitle, eDiv);
-        */
-        
-        eTitle.addEventListener("click", function() {
-            //var asTitle = getAllTitle();
-            sendCopyText(sTitle, 0);
-        }, false);
-    }
-    
     var sStreaminToUrl = existStreaminTo();
     
     if (giSite == SITE_STREAMINTO)
@@ -437,7 +460,9 @@ function addExternLinkButton()
         var sFileName = getRegularFileName(getAllTitle()[0]);
         var sCommand = getStreamIoBatchText(sHtml, sUrl, sFileName);
         
-        log("Parse streamin.to : " + sFileName);
+        log("Parse streamin.to : [" + sCommand + "]" + sCommand.indexOf("http://"));
+        
+        //downloadText(sFileName, sHtml);
         
         var sTitle = "▣ 串流影片批次檔 (以外部程式下載) ▣";
         var eTitle = document.getElementsByTagName("h2")[0];
@@ -445,16 +470,29 @@ function addExternLinkButton()
         {
             addTextMessage(eTitle, "▣ 影片已被刪除 ▣");
         }
+        else if (sCommand.indexOf("http://") == 0)
+        {
+            sTitle = "▣ 影片另存新檔 ▣";
+            addLinkButton(eTitle, sTitle, sCommand)
+        }
         else if (sCommand != RESPONSE_NEED_CLICK_BUTTON)
         {
             addBatchFileButton(eTitle, sTitle, sFileName, sCommand);
         }
+        
     }
     else if (sStreaminToUrl)
     {
         console.log("Streamin.to URL: " + sStreaminToUrl);
         
         sendHttpRequest(sStreaminToUrl, parseStreaminTo);
+    }
+    
+    var eTitle = document.getElementsByTagName("h1")[0];
+    
+    if (giSite == SITE_ALLUCEE)
+    {
+        addCoverSearchButton(eTitle, "▣ 搜尋影片封面 ▣", getAllTitle()[0]);
     }
     
     if (!existFlashxTV())
@@ -479,7 +517,6 @@ function addExternLinkButton()
     
     console.log("Exist Flashx ID: " + sId);
 
-    var eTitle = document.getElementsByTagName("h1")[0];
     var eDiv = document.createElement("a");
     eDiv.href = "http://www.tubeoffline.com/download.php?host=flashxTV&video=http://www.flashx.tv/" + sId + ".html";
     eDiv.target = "_blank";
@@ -491,7 +528,16 @@ function addExternLinkButton()
 
 function getRegularFileName(str)
 {
-    return str.trim().replace(/ /g, "_").replace(/\W/g, "");
+    str = str.trim().replace(/-| /g, "_").replace(/\W/g, "").replace(/_/g, "-");
+    
+    var iLen = str.length;
+    while (str.substring(iLen - 1, iLen) == "-")
+    {
+        iLen--;
+        str = str.substring(0, iLen);
+    }
+    
+    return str;
 }
 
 function sendHttpRequest(sUrl, onReadyFunction)
@@ -512,7 +558,8 @@ function parseStreaminTo()
         
         console.log("Get Streamin.to html Done : " + sHtml.length);
         
-        var sFileName = getRegularFileName(getAllTitle()[0]);
+        var sMediaTitle = getAllTitle()[0];
+        var sFileName = getRegularFileName(sMediaTitle);
         var sCommand = getStreamIoBatchText(sHtml, sUrl, sFileName);
         log(sCommand);
         
@@ -527,6 +574,8 @@ function parseStreaminTo()
         {
             addBatchFileButton(eTitle, sTitle, sFileName, sCommand);
         }
+        
+        addLinkButton(eTitle, sCommand, sCommand);
     }
 }
 
@@ -581,6 +630,16 @@ function getStreamIoBatchText(sHtml, sUrl, sFileName)
             return RESPONSE_NEED_CLICK_BUTTON;
         }
         return RESPONSE_FILE_DELETED;
+    }
+    else if (sHtml.indexOf("file:'http://") > 0)
+    {
+        var iBegin = sHtml.indexOf("file:'http://") + 6;
+        var iEnd = sHtml.indexOf("'", iBegin);
+
+        if (iBegin > 6 && iEnd > iBegin)
+        {
+            return sHtml.substring(iBegin, iEnd).trim();
+        }
     }
     
     var sDownCommand = "rtmpdump -r \"" + r + "\" -a \"" + a + "\" -f \"" + f + "\" -W \"" + w + "\" -p \"" + p + "\" -y \"" + y + "\" -o \"" + o + sExtension + "\"";
@@ -662,6 +721,8 @@ function setPopWindowSize()
 function getAllTitle()
 {
     var sUrl = window.location.href;
+    var eBody = document.getElementsByTagName("body")[0];
+    var sHtml = eBody.innerHTML;
     var asTitle = new Array();
 
     if (giSite == SITE_YOUTUBE)
@@ -674,10 +735,10 @@ function getAllTitle()
         
         for ( var i = 0; i < aeTitle.length; i ++ )
         {
-            var sHTML = aeTitle[i].innerHTML;
-            var iBegin = sHTML.indexOf("<b>") + 3;
-            var iEnd = sHTML.indexOf("</b>", iBegin);
-            asTitle[i] = sHTML.substring(iBegin, iEnd);
+            sHtml = aeTitle[i].innerHTML;
+            var iBegin = sHtml.indexOf("<b>") + 3;
+            var iEnd = sHtml.indexOf("</b>", iBegin);
+            asTitle[i] = sHtml.substring(iBegin, iEnd);
         }
     }
     else if (giSite == SITE_XUITE)
@@ -688,10 +749,10 @@ function getAllTitle()
 
         if (aeTitle.length)
         {
-            var sHTML = aeTitle[0].innerHTML.split(sSplitToken)[0];
+            sHtml = aeTitle[0].innerHTML.split(sSplitToken)[0];
             var iBegin = 0
-            var iEnd = sHTML.length;
-            asTitle[0] = sHTML.substring(iBegin, iEnd);
+            var iEnd = sHtml.length;
+            asTitle[0] = sHtml.substring(iBegin, iEnd);
         }
     }
     else if (giSite == SITE_ADULTCITY)
@@ -700,10 +761,10 @@ function getAllTitle()
         
         for ( var i = 0; i < aeTitle.length; i ++ )
         {
-            var sHTML = aeTitle[i].innerHTML;
-            var iBegin = sHTML.indexOf("<p>") + 3;
-            var iEnd = sHTML.indexOf("</p>", iBegin);
-            asTitle[i] = sHTML.substring(iBegin, iEnd);
+            sHtml = aeTitle[i].innerHTML;
+            var iBegin = sHtml.indexOf("<p>") + 3;
+            var iEnd = sHtml.indexOf("</p>", iBegin);
+            asTitle[i] = sHtml.substring(iBegin, iEnd);
         }
     }
     else if (giSite == SITE_EROPPY)
@@ -787,6 +848,27 @@ function getAllTitle()
             asTitle[0] = eTitle.innerHTML.trim();
         }
     }
+    else if (giSite == SITE_ALLUCEE)
+    {
+        var aeDiv = document.getElementsByTagName("td");
+        
+        for (var i = 0; i < aeDiv.length; i++)
+        {
+            if (aeDiv[i].innerHTML.indexOf("<b>Title</b>") >= 0)
+            {
+                asTitle[0] = aeDiv[i + 1].innerHTML.replace(/(<([^>]+)>)/ig, "").replace(/-->/g, "").trim().split(" - ")[0].replace("[", "").replace("]", "").trim();
+                break;
+            }
+        }
+        
+        log("alluc.ee Title : " + asTitle[0]);
+    }
+    else if (document.getElementById("gj"))
+    {
+        var asTitle = [];
+        
+        asTitle[0] = document.getElementById("gj").innerHTML.trim();
+    }
     else
     {
         var sSplitToken = " - ";
@@ -813,16 +895,18 @@ function getAllTitle()
             asTitle[0] = aeTitle[0].innerHTML.trim(); // final choice
         }
         
+        log("Original Title : " + asTitle[0]);
+        
         asTitle[0] = asTitle[0].replace(/-\w\w成人影片|-85街論壇|-85st免費a片線上看/g, "");
         
         var eBody = document.getElementsByTagName("body")[0];
-        var sHTML = eBody.innerHTML;
-        
-        var iEnd = sHTML.indexOf("pl.jpg");
-        if (iEnd > 0)
+        var sHtml = eBody.innerHTML;
+
+        var iEnd = sHtml.indexOf("pl.jpg");
+        if (iEnd > 0 && asTitle[0].indexOf("[") != 0)
         {
-            var iBegin = sHTML.lastIndexOf(">", iEnd) + 1;
-            var sTemp = sHTML.substring(iBegin, iEnd).trim().toUpperCase();
+            var iBegin = sHtml.lastIndexOf(">", iEnd) + 1;
+            var sTemp = sHtml.substring(iBegin, iEnd).trim().toUpperCase();
             
             asTemp = sTemp.split(/[a-zA-Z]+/g);
             var sNum = asTemp[asTemp.length - 1];
@@ -855,6 +939,34 @@ function getAllTitle()
         }
     }
     
+    asTitle[0] = asTitle[0].split(",【")[0];
+
+    if (asTitle[0] && asTitle[0].indexOf("[") == 0)
+    {
+        if (asTitle[0].indexOf("][") > 0)
+        {
+            asTitle[0] = asTitle[0].replace(/\[.+\]/g, "");
+            
+            asTitle[0] = asTitle[0].trim();
+        }
+        else
+        {
+            asTitle[0] = asTitle[0].replace("[", "").replace("]", "");
+        }
+    }
+    
+    var sSerialNumber1 = asTitle[0].substring(0, 6);
+    if (sSerialNumber1.match(/[a-zA-Z]{3}\d{3}/))
+    {
+        var sSerialNumber2 = sSerialNumber1.substring(0, 3) + "-" + sSerialNumber1.substring(3, 6);
+        var sLaterTitle = asTitle[0].substring(6, asTitle[0].length).split(" - ")[0];
+        
+        asTitle[0] = sSerialNumber2 + " " + sLaterTitle;
+        
+        log("OLD : " + sSerialNumber1);
+        log("NEW : " + sSerialNumber2);
+    }
+    
     log("getAllTitle:" + asTitle);
     
     return asTitle;
@@ -871,26 +983,26 @@ function getAllPicUrl()
         
         for ( var i = 0; i < aePic.length; i ++ )
         {
-            var sHTML = aePic[i].innerHTML;
+            var sHtml = aePic[i].innerHTML;
 
             var sTag = "http://www.flashx.tv/embed-";
             
-            var iBegin = sHTML.indexOf(sTag) + sTag.length;
-            var iEnd = sHTML.indexOf("-640x360", iBegin);
+            var iBegin = sHtml.indexOf(sTag) + sTag.length;
+            var iEnd = sHtml.indexOf("-640x360", iBegin);
             if (iBegin > sTag.length && iEnd > iBegin)
             {
-                gasExternID[i] = sHTML.substring(iBegin, iEnd);
+                gasExternID[i] = sHtml.substring(iBegin, iEnd);
             }
             else
             {
                 gasExternID[i] = null;
             }
             
-            iBegin = sHTML.indexOf("image=") + 6;
-            iEnd = sHTML.indexOf("\"", iBegin);
-            asPic[i] = sHTML.substring(iBegin, iEnd);
+            iBegin = sHtml.indexOf("image=") + 6;
+            iEnd = sHtml.indexOf("\"", iBegin);
+            asPic[i] = sHtml.substring(iBegin, iEnd);
             
-            //console.log("-->" + sHTML.substring(0, iBegin));
+            //console.log("-->" + sHtml.substring(0, iBegin));
         }    
         
         
@@ -985,6 +1097,24 @@ function sendCopyText(sText, iVideoIndex)
     log("COPY TEXT:" + sText);
 }
 
+function downloadText(sFileName, sText)
+{
+    var blob = new Blob([sText], {type: "text/plain;charset=utf-8"});
+    var sUrl = URL.createObjectURL(blob);
+
+    var eDiv = document.createElement("a");
+    eDiv.id = "DOWNLOAD_TEXT_FILE_ID";
+    eDiv.href = sUrl;
+    eDiv.download = sFileName + ".txt";
+    eDiv.target = "_blank";
+    
+    var eBody = document.getElementsByTagName("body")[0];
+
+    addElementChild(eBody, eDiv, false);
+    
+    eDiv.click();
+}
+
 function addBatchFileButton(eTitle, sTitle, sFileName, sText, bSameLine)
 {
     var blob = new Blob([sText], {type: "text/plain;charset=utf-8"});
@@ -994,6 +1124,30 @@ function addBatchFileButton(eTitle, sTitle, sFileName, sText, bSameLine)
     eDiv.id = "BATCH_FILE_ID";
     eDiv.href = sUrl;
     eDiv.download = sFileName + ".bat";
+    eDiv.target = "_blank";
+    eDiv.innerHTML = sTitle;
+
+    addElementChild(eTitle, eDiv, bSameLine);
+}
+
+function addCoverSearchButton(eTitle, sTitle, sKeyword, bSameLine)
+{
+    var sUrl = "https://www.google.com.tw/search?q=" + sKeyword + "&site=imghp&source=lnms&tbm=isch";
+
+    var eDiv = document.createElement("a");
+    eDiv.id = "COVER_SEARCH_ID";
+    eDiv.href = sUrl;
+    eDiv.target = "_blank";
+    eDiv.innerHTML = sTitle;
+
+    addElementChild(eTitle, eDiv, bSameLine);
+}
+
+function addLinkButton(eTitle, sTitle, sUrl, bSameLine)
+{
+    var eDiv = document.createElement("a");
+    eDiv.id = "COVER_SEARCH_ID";
+    eDiv.href = sUrl;
     eDiv.target = "_blank";
     eDiv.innerHTML = sTitle;
 
@@ -1010,7 +1164,7 @@ function addTextMessage(eTitle, sText, bSameLine)
 
 function log(sText)
 {
-    console.log("[OVP]" + sText);
+    console.log("[OVP.L]" + sText);
 }
 
 /*
